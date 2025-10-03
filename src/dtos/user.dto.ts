@@ -1,5 +1,5 @@
 import { Expose, Exclude } from "class-transformer";
-import { IsDate, IsEmail, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, MaxLength, ValidateIf } from "class-validator";
 
 export class CreateUserDTO {
   @IsEmail()
@@ -7,10 +7,29 @@ export class CreateUserDTO {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(16)
   username: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(32)
+  password: string;
+}
+
+export class LoginUserDTO {
+  @ValidateIf((obj) => !obj.username)
+  @IsEmail()
+  email: string;
+
+  @ValidateIf((obj) => !obj.email)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(16)
+  username: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(32)
   password: string;
 }
 
