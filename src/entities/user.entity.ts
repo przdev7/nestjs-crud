@@ -6,8 +6,17 @@ export class UserEntity {
   id: number;
 
   @Column()
+  email: string;
+
+  @Column()
   username: string;
 
   @Column()
   password: string;
+
+  @Column()
+  createdAt: Date;
+
+  @Column()
+  updatedAt: Date;
 }
