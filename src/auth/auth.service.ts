@@ -49,6 +49,6 @@ export class AuthService {
   }
 
   async refresh(payload: object) {
-    return await this.genJwt(payload, "REFRESH");
+    return await this.genJwt(payload, "ACCESS");
   }
 }
