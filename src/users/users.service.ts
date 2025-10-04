@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { ConflictException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserEntity } from "../entities/user.entity";
 import { Repository } from "typeorm";
@@ -19,10 +19,10 @@ export class UsersService {
 
   async create(user: CreateUserDTO): Promise<void> {
     const existingUser = await this.findOne(user.email);
-    if (existingUser) throw new BadRequestException("email already taken");
+    if (existingUser) throw new ConflictException();
 
-    await this.user.insert(user).catch((err) => {
-      throw new InternalServerErrorException(err);
+    await this.user.insert(user).catch(() => {
+      throw new InternalServerErrorException();
     });
   }
 
