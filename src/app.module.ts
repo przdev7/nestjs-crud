@@ -23,6 +23,8 @@ import { UserEntity } from "./entities/user.entity";
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_PORT: Joi.number().port().required(),
+        JWT_SECRET: Joi.string().required(),
+        JWT_REFRESH_SECRET: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
