@@ -47,6 +47,17 @@ export class AuthService {
     });
   }
 
+  //TODO: Create type for data (user.req)
+  //FIXME: Unauthorize old jwt token after this method
+  async changePassword(newPassword: string, data: any): Promise<string> {
+    console.log(data);
+    const user = await this.user.findOne(data.email);
+    if (!user) throw new UnauthorizedException();
+
+    await this.user.update(await user.hashPassword(newPassword));
+    return "password successfully changed";
+  }
+
   async refresh(payload: object) {
     return await this.genJwt(payload, "ACCESS");
   }

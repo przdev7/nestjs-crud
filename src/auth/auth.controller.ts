@@ -1,5 +1,5 @@
-import { Body, Controller, Post, Request } from "@nestjs/common";
-import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
+import { Body, Controller, HttpCode, Post, Request } from "@nestjs/common";
+import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
 import { AuthService } from "./auth.service";
 import { AuthType, Public } from "./auth.decorator";
 
@@ -17,6 +17,12 @@ export class AuthController {
   @Post("sign-in")
   async signIn(@Body() data: LoginUserDTO): Promise<object> {
     return await this.auth.signIn(data);
+  }
+
+  @Post("change-password")
+  @HttpCode(200)
+  async changePassword(@Body() data: ChangePasswordUserDTO, @Request() req): Promise<string> {
+    return await this.auth.changePassword(data.password, req.user);
   }
 
   @AuthType("REFRESH")

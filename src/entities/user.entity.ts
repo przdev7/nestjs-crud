@@ -21,7 +21,7 @@ export class UserEntity {
   @Column()
   updatedAt: Date;
 
-  public async hashPassword(password: string) {
+  public async hashPassword(password: string): Promise<UserEntity> {
     this.password = await bcrypt.hash(password, 10);
     return this;
   }

@@ -17,17 +17,6 @@ export class UsersService {
     return user;
   }
 
-  async create(data: CreateUserDTO): Promise<UserEntity> {
-    const existingUser = await this.findOne(data.email);
-    if (existingUser) throw new ConflictException();
-
-    const user = await this.user.create(data).hashPassword(data.password);
-
-    return await this.user.save(user).catch(() => {
-      throw new InternalServerErrorException();
-    });
-  }
-
   async findOne(identifier: string): Promise<UserEntity | null> {
     const user = await this.user.findOne({
       where: [
@@ -40,5 +29,20 @@ export class UsersService {
       ],
     });
     return user;
+  }
+
+  async create(data: CreateUserDTO): Promise<UserEntity> {
+    const existingUser = await this.findOne(data.email);
+    if (existingUser) throw new ConflictException();
+
+    const user = await this.user.create(data).hashPassword(data.password);
+
+    return await this.user.save(user).catch(() => {
+      throw new InternalServerErrorException();
+    });
+  }
+
+  async update(data: UserEntity): Promise<void> {
+    await this.user.save(data);
   }
 }
