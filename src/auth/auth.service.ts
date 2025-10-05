@@ -16,7 +16,6 @@ export class AuthService {
   ) {}
 
   async signUp(data: CreateUserDTO): Promise<string> {
-    data.password = await bcrypt.hash(data.password, 10);
     await this.user.create(data);
     return "User created";
   }

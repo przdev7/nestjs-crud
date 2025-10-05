@@ -17,11 +17,13 @@ export class UsersService {
     return user;
   }
 
-  async create(user: CreateUserDTO): Promise<void> {
-    const existingUser = await this.findOne(user.email);
+  async create(data: CreateUserDTO): Promise<UserEntity> {
+    const existingUser = await this.findOne(data.email);
     if (existingUser) throw new ConflictException();
 
-    await this.user.insert(user).catch(() => {
+    const user = await this.user.create(data).hashPassword(data.password);
+
+    return await this.user.save(user).catch(() => {
       throw new InternalServerErrorException();
     });
   }

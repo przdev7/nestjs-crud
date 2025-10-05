@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import * as bcrypt from "bcrypt";
 
 @Entity("users")
 export class UserEntity {
@@ -19,4 +20,9 @@ export class UserEntity {
 
   @Column()
   updatedAt: Date;
+
+  public async hashPassword(password: string) {
+    this.password = await bcrypt.hash(password, 10);
+    return this;
+  }
 }
