@@ -3,7 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AUTH_TYPE, IS_PUBLIC } from "./auth.decorator";
+import { AUTH_TYPE, IS_PUBLIC } from "../shared";
+import IJwtPayload from "../shared/types/jwtPayload";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -30,10 +31,9 @@ export class AuthGuard implements CanActivate {
         authType == "REFRESH"
           ? this.config.getOrThrow<string>("JWT_REFRESH_SECRET")
           : this.config.getOrThrow<string>("JWT_SECRET");
-      const payload = await this.jwt.verifyAsync(token, {
+      const payload: IJwtPayload = await this.jwt.verifyAsync(token, {
         secret: secret,
       });
-      console.log(secret);
       request["user"] = payload;
     } catch {
       throw new UnauthorizedException();
@@ -44,7 +44,6 @@ export class AuthGuard implements CanActivate {
 
   private extractTokenFromHeader(req: Request): string | undefined {
     const [type, token] = req.headers.authorization?.split(" ") ?? [];
-
     return type == "Bearer" ? token : undefined;
   }
 }

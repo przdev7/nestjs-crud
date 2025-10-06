@@ -5,7 +5,8 @@ import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import ms from "ms";
-import { jwtTypes } from "./auth.decorator";
+import { jwtTypes } from "../shared";
+import IJwtPayload from "../shared/types/jwtPayload";
 
 @Injectable()
 export class AuthService {
@@ -25,21 +26,21 @@ export class AuthService {
     if (!existingUser) throw new UnauthorizedException();
     if (!(await bcrypt.compare(data.password, existingUser.password))) throw new UnauthorizedException();
 
-    const payload = {
+    const payload: IJwtPayload = {
       id: existingUser.id,
       email: existingUser.email,
       username: existingUser.username,
     };
 
     return {
-      token: await this.genJwt(payload, "ACCESS"),
-      refreshToken: await this.genJwt(payload, "REFRESH"),
+      token: await this.genJwt(payload, jwtTypes.ACCESS),
+      refreshToken: await this.genJwt(payload, jwtTypes.REFRESH),
     };
   }
 
-  async genJwt(payload: object, type: keyof jwtTypes): Promise<string> {
-    const expiresIn = type === "ACCESS" ? ms("7d") : ms("30d");
-    const secret = type === "ACCESS" ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
+  async genJwt(payload: object, type: jwtTypes): Promise<string> {
+    const expiresIn = type === jwtTypes.ACCESS ? ms("7d") : ms("30d");
+    const secret = type === jwtTypes.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
 
     return await this.jwt.signAsync(payload, {
       expiresIn: expiresIn,
@@ -47,9 +48,8 @@ export class AuthService {
     });
   }
 
-  //TODO: Create type for data (user.req)
   //FIXME: Unauthorize old jwt token after this method
-  async changePassword(newPassword: string, data: any): Promise<string> {
+  async changePassword(newPassword: string, data: IJwtPayload): Promise<string> {
     console.log(data);
     const user = await this.user.findOne(data.email);
     if (!user) throw new UnauthorizedException();
@@ -58,7 +58,7 @@ export class AuthService {
     return "password successfully changed";
   }
 
-  async refresh(payload: object) {
-    return await this.genJwt(payload, "ACCESS");
+  async refresh(payload: IJwtPayload) {
+    return await this.genJwt(payload, jwtTypes.ACCESS);
   }
 }

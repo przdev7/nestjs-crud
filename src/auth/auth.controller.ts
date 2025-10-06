@@ -1,7 +1,10 @@
-import { Body, Controller, HttpCode, Post, Request } from "@nestjs/common";
+import { Body, Controller, HttpCode, Post, Req } from "@nestjs/common";
+import type { Request } from "express";
 import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
 import { AuthService } from "./auth.service";
 import { AuthType, Public } from "./auth.decorator";
+import { jwtTypes } from "../shared";
+import IJwtPayload from "../shared/types/jwtPayload";
 
 @Controller("auth")
 export class AuthController {
@@ -21,15 +24,15 @@ export class AuthController {
 
   @Post("change-password")
   @HttpCode(200)
-  async changePassword(@Body() data: ChangePasswordUserDTO, @Request() req): Promise<string> {
+  async changePassword(@Body() data: ChangePasswordUserDTO, @Req() req: Request): Promise<string> {
     return await this.auth.changePassword(data.password, req.user);
   }
 
-  @AuthType("REFRESH")
+  @AuthType(jwtTypes.REFRESH)
   @Post("refresh")
-  async refresh(@Request() req): Promise<object> {
+  async refresh(@Req() req: Request): Promise<object> {
     const { id, username, email } = req.user;
-    const payload = { id, username, email };
+    const payload: IJwtPayload = { id, username, email };
     return await { token: await this.auth.refresh(payload) };
   }
 }

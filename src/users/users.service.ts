@@ -37,9 +37,7 @@ export class UsersService {
 
     const user = await this.user.create(data).hashPassword(data.password);
 
-    return await this.user.save(user).catch(() => {
-      throw new InternalServerErrorException();
-    });
+    return await this.user.save(user);
   }
 
   async update(data: UserEntity): Promise<void> {
