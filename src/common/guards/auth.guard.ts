@@ -3,8 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AUTH_TYPE, IS_PUBLIC } from "../shared";
-import IJwtPayload from "../shared/types/jwtPayload";
+import { AUTH_TYPE, IS_PUBLIC } from "../../shared";
+import IJwtPayload from "../../shared/types/jwtPayload";
 
 @Injectable()
 export class AuthGuard implements CanActivate {

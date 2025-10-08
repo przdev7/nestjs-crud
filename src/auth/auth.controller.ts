@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post, Req } from "@nestjs/common";
 import type { Request } from "express";
-import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
+import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../users/dto/user.dto";
 import { AuthService } from "./auth.service";
-import { AuthType, Public } from "./auth.decorator";
+import { AuthType, Public } from "../common/decorators/auth.decorator";
 import { jwtTypes } from "../shared";
 import IJwtPayload from "../shared/types/jwtPayload";
 
