@@ -1,6 +1,18 @@
 import { Expose, Exclude } from "class-transformer";
-import { IsDate, IsEmail, IsNotEmpty, IsNumber, IsString, MaxLength, MinLength, ValidateIf } from "class-validator";
+import {
+  IsArray,
+  IsDate,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateIf,
+} from "class-validator";
 import { OmitType, PickType } from "@nestjs/swagger";
+import { roles } from "../../shared/enums/roles.enum";
 
 export class UserDTO {
   @Expose()
@@ -33,11 +45,16 @@ export class UserDTO {
   @Expose()
   @IsDate()
   updatedAt: Date;
+
+  @Expose()
+  @IsEnum(roles)
+  @IsArray()
+  roles: roles;
 }
 
 export class ChangePasswordUserDTO extends PickType(UserDTO, ["password"] as const) {}
-export class CreateUserDTO extends OmitType(UserDTO, ["id", "createdAt", "updatedAt"]) {}
-export class LoginUserDTO extends OmitType(UserDTO, ["id", "createdAt", "updatedAt"]) {
+export class CreateUserDTO extends OmitType(UserDTO, ["id", "createdAt", "updatedAt", "roles"]) {}
+export class LoginUserDTO extends OmitType(UserDTO, ["id", "createdAt", "updatedAt", "roles"]) {
   @ValidateIf((obj) => !obj.username)
   email: string;
   @ValidateIf((obj) => !obj.email)
