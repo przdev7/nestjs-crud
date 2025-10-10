@@ -3,8 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AUTH_TYPE, IS_PUBLIC } from "../../shared";
-import IJwtPayload from "../../shared/types/jwtPayload";
+import { AUTH_TYPE, ROLES, IJwtPayload, roles } from "../../shared";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -18,9 +17,9 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     const authType = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
-    const isPublic = this.reflector.getAllAndOverride(IS_PUBLIC, [context.getHandler(), context.getClass()]);
+    const roles: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
 
-    if (isPublic) return true;
+    if (roles.length === 0) return true;
 
     if (!token) {
       throw new UnauthorizedException();

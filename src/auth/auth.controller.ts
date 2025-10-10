@@ -2,21 +2,20 @@ import { Body, Controller, HttpCode, Post, Req } from "@nestjs/common";
 import type { Request } from "express";
 import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../users/dto/user.dto";
 import { AuthService } from "./auth.service";
-import { AuthType, Public } from "../common/decorators/auth.decorator";
-import { jwtTypes } from "../shared";
-import IJwtPayload from "../shared/types/jwtPayload";
+import { AuthType, Roles } from "../common/decorators/auth.decorator";
+import { jwtTypes, IJwtPayload } from "../shared";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
-  @Public()
+  @Roles([])
   @Post("sign-up")
   async signUp(@Body() data: CreateUserDTO): Promise<string> {
     return await this.auth.signUp(data);
   }
 
-  @Public()
+  @Roles([])
   @Post("sign-in")
   async signIn(@Body() data: LoginUserDTO): Promise<object> {
     return await this.auth.signIn(data);

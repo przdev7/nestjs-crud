@@ -5,8 +5,7 @@ import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import ms from "ms";
-import { jwtTypes } from "../shared";
-import IJwtPayload from "../shared/types/jwtPayload";
+import { jwtTypes, IJwtPayload } from "../shared";
 
 @Injectable()
 export class AuthService {
