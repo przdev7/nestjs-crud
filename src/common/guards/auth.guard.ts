@@ -24,7 +24,6 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
-
     try {
       const secret =
         authType == "REFRESH"
