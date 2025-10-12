@@ -9,6 +9,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "../common/guards/auth.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { UsersModule } from "../users/users.module";
+import { CacheModule } from "@nestjs/cache-manager";
 
 @Global()
 @Module({
@@ -46,6 +47,11 @@ import { UsersModule } from "../users/users.module";
         entities: [UserEntity],
       }),
     }),
+    CacheModule.registerAsync({
+      inject: [ConfigService],
+      isGlobal: true,
+      useFactory: () => ({}),
+    }),
   ],
 
   providers: [
@@ -53,6 +59,6 @@ import { UsersModule } from "../users/users.module";
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 
-  exports: [JwtModule, TypeOrmModule],
+  exports: [JwtModule, TypeOrmModule, CacheModule],
 })
 export class CoreModule {}
