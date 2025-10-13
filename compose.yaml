@@ -1,0 +1,21 @@
+services:
+  redis:
+    hostname: redis
+    image: "redis:alpine"
+    ports:
+      - "6379:6379/tcp"
+    volumes:
+      - cache:/data
+    restart: always
+  backend:
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    build: .
+    ports:
+      - "3001:8080/tcp"
+
+volumes:
+  cache:
+    driver: local
