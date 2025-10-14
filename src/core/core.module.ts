@@ -40,6 +40,8 @@ import { join } from "path";
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: "postgres",
+        //FIXME: only if u are using docker i will fix it in feature
+        // host: "database"
         port: config.getOrThrow("DB_PORT"),
         username: config.getOrThrow("DB_USERNAME"),
         password: config.getOrThrow("DB_PASSWORD"),

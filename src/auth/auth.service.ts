@@ -34,8 +34,8 @@ export class AuthService {
       username: existingUser.username,
     };
 
-    const token: string = await this.genJwt(payload, jwtTypes.REFRESH);
-    const refresh: string = await this.genJwt(payload, jwtTypes.ACCESS);
+    const token: string = await this.genJwt(payload, jwtTypes.ACCESS);
+    const refresh: string = await this.genJwt(payload, jwtTypes.REFRESH);
 
     await this.cache.set(`${existingUser.id}`, { token: token, refresh: refresh }, ms("5m"));
 

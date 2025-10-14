@@ -1,21 +1,40 @@
 services:
+  database:
+    image: "postgres:alpine"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    expose:
+      - 5432
+    ports:
+      - "5431:5432/tcp"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
   redis:
+    depends_on:
+      - database
     hostname: redis
     image: "redis:alpine"
     ports:
-      - "6379:6379/tcp"
+      - "${PORT_REDIS}:${PORT_REDIS}/tcp"
+    expose:
+      - 6379
     volumes:
       - cache:/data
     restart: always
   backend:
-    env_file:
-      - .env
+    env_file: .env
     depends_on:
+      - database
       - redis
     build: .
     ports:
-      - "3001:8080/tcp"
+      - "${PORT_MAIN}:${PORT_MAIN}/tcp"
 
 volumes:
   cache:
+    driver: local
+  postgres-data:
     driver: local

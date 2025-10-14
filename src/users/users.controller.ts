@@ -11,7 +11,6 @@ export class UsersController {
   @Get("me")
   @Roles([roles.USER])
   async me(@Req() req: Request) {
-    console.log(req.user);
     return req.user;
   }
 

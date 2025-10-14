@@ -3,7 +3,7 @@ import type { Request } from "express";
 import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../users/dto/user.dto";
 import { AuthService } from "./auth.service";
 import { AuthType, Roles } from "../common/decorators/auth.decorator";
-import { jwtTypes, IJwtPayload } from "../shared";
+import { jwtTypes, IJwtPayload, roles } from "../shared";
 
 @Controller("auth")
 export class AuthController {
@@ -21,12 +21,14 @@ export class AuthController {
     return await this.auth.signIn(data);
   }
 
+  @Roles([roles.USER])
   @Post("change-password")
   @HttpCode(200)
   async changePassword(@Body() data: ChangePasswordUserDTO, @Req() req: Request): Promise<string> {
     return await this.auth.changePassword(data.password, req.user);
   }
 
+  @Roles([roles.USER])
   @AuthType(jwtTypes.REFRESH)
   @Post("refresh")
   async refresh(@Req() req: Request): Promise<object> {
