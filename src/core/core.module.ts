@@ -10,6 +10,9 @@ import { RolesGuard } from "../common/guards/roles.guard";
 import { UsersModule } from "../users/users.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { join } from "path";
+import * as redisStore from "cache-manager-redis-store";
+
+const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : ".env";
 
 @Global()
 @Module({
@@ -17,10 +20,11 @@ import { join } from "path";
     UsersModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: join(process.cwd(), ".env"),
+      envFilePath: join(process.cwd(), envFileName),
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().default("development").valid("development", "production"),
+        // NODE_ENV: Joi.string().default("development").valid("development", "production"),
         PORT_MAIN: Joi.number().port().default(3000),
+        DB_HOST: Joi.string().required(),
         DB_NAME: Joi.string().required(),
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
@@ -40,19 +44,19 @@ import { join } from "path";
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: "postgres",
-        //FIXME: only if u are using docker i will fix it in feature
-        // host: "database"
-        port: config.getOrThrow("DB_PORT"),
-        username: config.getOrThrow("DB_USERNAME"),
-        password: config.getOrThrow("DB_PASSWORD"),
-        database: config.getOrThrow("DB_NAME"),
+        host: config.getOrThrow<string>("DB_HOST"),
+        port: config.getOrThrow<number>("DB_PORT"),
+        username: config.getOrThrow<string>("DB_USERNAME"),
+        password: config.getOrThrow<string>("DB_PASSWORD"),
+        database: config.getOrThrow<string>("DB_NAME"),
         entities: [UserEntity],
       }),
     }),
     CacheModule.registerAsync({
       inject: [ConfigService],
       isGlobal: true,
-      useFactory: () => ({}),
+      //FIXME: connection with redis
+      useFactory: (config: ConfigService) => redisStore,
     }),
   ],
 
