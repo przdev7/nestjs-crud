@@ -10,7 +10,7 @@ import { RolesGuard } from "../common/guards/roles.guard";
 import { UsersModule } from "../users/users.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { join } from "path";
-import * as redisStore from "cache-manager-redis-store";
+import KeyvRedis from "@keyv/redis";
 
 const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : ".env";
 
@@ -31,6 +31,7 @@ const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : 
         DB_PORT: Joi.number().port().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_REFRESH_SECRET: Joi.string().required(),
+        REDIS_URI: Joi.string().required(),
       }),
     }),
     JwtModule.registerAsync({
@@ -56,7 +57,9 @@ const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : 
       inject: [ConfigService],
       isGlobal: true,
       //FIXME: connection with redis
-      useFactory: (config: ConfigService) => redisStore,
+      useFactory: (config: ConfigService) => ({
+        stores: new KeyvRedis(config.getOrThrow<string>("REDIS_URI")),
+      }),
     }),
   ],
 

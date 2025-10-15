@@ -20,7 +20,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   spelunker(app);
   await app.listen(config.getOrThrow<number>("PORT_MAIN"), "0.0.0.0", () =>
-    console.log(`listening on: ${config.getOrThrow("PORT_MAIN")}`),
+    console.log(`listening on: ${config.getOrThrow<number>("PORT_MAIN")}`),
   );
 }
 bootstrap();
