@@ -56,7 +56,6 @@ const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : 
     CacheModule.registerAsync({
       inject: [ConfigService],
       isGlobal: true,
-      //FIXME: connection with redis
       useFactory: (config: ConfigService) => ({
         stores: new KeyvRedis(config.getOrThrow<string>("REDIS_URI")),
       }),

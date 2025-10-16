@@ -1,4 +1,4 @@
-import IJwtPayload from "./jwtPayload";
+import IJwtPayload from "./IjwtPayload";
 
 declare global {
   namespace Express {

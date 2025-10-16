@@ -5,9 +5,19 @@ import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import ms from "ms";
-import { jwtTypes, IJwtPayload } from "../shared";
+import { jwtTypes, IJwtPayload, ICachePaylad } from "../shared";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
+
+//FIXME: Bad optimalization
+/**
+ * This auth system has poor performance,
+ * this is first version of this, i need to do this better.
+ * Im thinking of creating blacklist instead of authorized tokens
+ * but Im not sure how that would work, but I have idea with blacklisting JTI.
+ */
+
+//TODO: logout method & controller
 
 @Injectable()
 export class AuthService {
@@ -28,16 +38,24 @@ export class AuthService {
     if (!existingUser) throw new UnauthorizedException();
     if (!(await bcrypt.compare(data.password, existingUser.password))) throw new UnauthorizedException();
 
+    //FIXME: Creating payload with jti for refresh token
     const payload: IJwtPayload = {
       id: existingUser.id,
       email: existingUser.email,
       username: existingUser.username,
     };
 
+    //TODO: Check execution time of this fragment of code
     const token: string = await this.genJwt(payload, jwtTypes.ACCESS);
     const refresh: string = await this.genJwt(payload, jwtTypes.REFRESH);
+    //
 
-    await this.cache.set(`${existingUser.id}`, { token: token, refresh: refresh }, ms("5m"));
+    //FIXME: Change redis record TTL to refresh token TTL
+    await this.cache.set<ICachePaylad>(
+      existingUser.id.toString(),
+      { token: token, refresh: refresh, unAuthorized: false },
+      ms("7d"),
+    );
 
     return {
       token: token,
@@ -55,10 +73,15 @@ export class AuthService {
     });
   }
 
-  //FIXME: Unauthorize old jwt token after this method
   async changePassword(newPassword: string, data: IJwtPayload): Promise<string> {
     const user = await this.user.findOne(data.email);
     if (!user) throw new UnauthorizedException();
+
+    const value = await this.cache.get<ICachePaylad>(user.id.toString());
+    if (!value) throw new UnauthorizedException();
+
+    value.unAuthorized = true;
+    await this.cache.set(user.id.toString(), value);
 
     await this.user.update(await user.hashPassword(newPassword));
     return "password successfully changed";

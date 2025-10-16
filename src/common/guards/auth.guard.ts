@@ -1,9 +1,11 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AUTH_TYPE, ROLES, IJwtPayload, roles } from "../../shared";
+import { AUTH_TYPE, ROLES, IJwtPayload, roles, ICachePaylad } from "../../shared";
+import type { Cache } from "cache-manager";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -11,6 +13,7 @@ export class AuthGuard implements CanActivate {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly reflector: Reflector,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: Request = context.switchToHttp().getRequest();
@@ -24,6 +27,7 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
+
     try {
       const secret =
         authType == "REFRESH"
@@ -32,6 +36,10 @@ export class AuthGuard implements CanActivate {
       const payload: IJwtPayload = await this.jwt.verifyAsync(token, {
         secret: secret,
       });
+
+      const value = await this.cache.get<ICachePaylad>(payload.id.toString());
+      if (!value || value.unAuthorized) throw new UnauthorizedException();
+
       request["user"] = payload;
     } catch {
       throw new UnauthorizedException();
