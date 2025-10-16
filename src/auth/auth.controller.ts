@@ -36,4 +36,11 @@ export class AuthController {
     const payload: IJwtPayload = { id, username, email };
     return await { token: await this.auth.refresh(payload) };
   }
+
+  @Roles([roles.USER])
+  @Post("logout")
+  async logout(@Req() req: Request): Promise<string> {
+    const payload: IJwtPayload = req.user;
+    return await this.auth.logout(payload);
+  }
 }

@@ -16,9 +16,6 @@ import type { Cache } from "cache-manager";
  * Im thinking of creating blacklist instead of authorized tokens
  * but Im not sure how that would work, but I have idea with blacklisting JTI.
  */
-
-//TODO: logout method & controller
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -45,10 +42,9 @@ export class AuthService {
       username: existingUser.username,
     };
 
-    //TODO: Check execution time of this fragment of code
+    //3ms
     const token: string = await this.genJwt(payload, jwtTypes.ACCESS);
     const refresh: string = await this.genJwt(payload, jwtTypes.REFRESH);
-    //
 
     //FIXME: Change redis record TTL to refresh token TTL
     await this.cache.set<ICachePaylad>(
@@ -87,7 +83,20 @@ export class AuthService {
     return "password successfully changed";
   }
 
-  async refresh(payload: IJwtPayload) {
+  async refresh(payload: IJwtPayload): Promise<string> {
     return await this.genJwt(payload, jwtTypes.ACCESS);
+  }
+
+  async logout(data: IJwtPayload): Promise<string> {
+    const user = await this.user.findOne(data.email);
+    if (!user) throw new UnauthorizedException();
+
+    const value = await this.cache.get<ICachePaylad>(user.id.toString());
+    if (!value) throw new UnauthorizedException();
+
+    value.unAuthorized = true;
+    await this.cache.set(user.id.toString(), value);
+
+    return "logout successful";
   }
 }
