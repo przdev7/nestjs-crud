@@ -17,16 +17,19 @@ export class UsersService {
     return user;
   }
 
-  async findOne(identifier: string): Promise<UserEntity | null> {
+  async findOne(identifier: string | number): Promise<UserEntity | null> {
     const user = await this.user.findOne({
-      where: [
-        {
-          username: identifier,
-        },
-        {
-          email: identifier,
-        },
-      ],
+      where:
+        typeof identifier === "number"
+          ? { id: identifier }
+          : [
+              {
+                username: identifier,
+              },
+              {
+                email: identifier,
+              },
+            ],
     });
     return user;
   }

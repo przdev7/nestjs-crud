@@ -4,7 +4,6 @@ import * as bcrypt from "bcrypt";
 import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import ms from "ms";
 import { jwtTypes, IJwtPayload } from "../shared";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
@@ -30,26 +29,26 @@ export class AuthService {
     if (!(await bcrypt.compare(data.password, existingUser.password))) throw new UnauthorizedException();
 
     //FIXME: temp solution i will fix this ineffective code
-    const payload: Omit<IJwtPayload, "exp"> = {
+    const payload: Omit<IJwtPayload, "exp" | "iat"> = {
       sub: existingUser.id.toString(),
-      iat: +new Date(),
+      // iat: new Date().getTime() / 1000,
       iss: "auth-service",
       aud: "auth-service",
       jti: crypto.randomUUID(),
       email: existingUser.email,
       username: existingUser.username,
     };
-    // const payloadRefresh: Omit<IJwtPayload, "exp" | "email" | "username"> = {
-    //   sub: existingUser.id.toString(),
-    //   iat: +new Date(),
-    //   iss: "auth-service",
-    //   aud: "auth-service",
-    //   jti: crypto.randomUUID(),
-    // };
+    const payloadRefresh: Omit<IJwtPayload, "exp" | "email" | "username" | "iat"> = {
+      sub: existingUser.id.toString(),
+      // iat: +new Date(),
+      iss: "auth-service",
+      aud: "auth-service",
+      jti: crypto.randomUUID(),
+    };
 
     //3ms
     const token: string = await this.genJwt(payload, jwtTypes.ACCESS);
-    const refresh: string = await this.genJwt(payload, jwtTypes.REFRESH);
+    const refresh: string = await this.genJwt(payloadRefresh, jwtTypes.REFRESH);
 
     return {
       token: token,
@@ -57,8 +56,11 @@ export class AuthService {
     };
   }
 
-  async genJwt(payload: Omit<IJwtPayload, "exp">, type: jwtTypes): Promise<string> {
-    const expiresIn = type === jwtTypes.ACCESS ? ms("5min") : ms("7d");
+  async genJwt(
+    payload: Omit<IJwtPayload, "exp"> | Omit<IJwtPayload, "exp" | "iat" | "email" | "username">,
+    type: jwtTypes,
+  ): Promise<string> {
+    const expiresIn = type === jwtTypes.ACCESS ? "5min" : "7d";
     const secret = type === jwtTypes.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
 
     const token = await this.jwt.signAsync(payload, {
@@ -67,14 +69,14 @@ export class AuthService {
     });
     const { exp, jti }: IJwtPayload = await this.jwt.decode(token);
 
-    const ttlRefresh = exp - +Date.now();
-    await this.cache.set(`blacklist:${jti}`, true, ttlRefresh);
+    const ttlRefresh = exp * 1000 - +Date.now();
+    await this.cache.set(`session:${jti}`, true, ttlRefresh);
 
     return token;
   }
 
   async changePassword(newPassword: string, data: Omit<IJwtPayload, "exp">): Promise<string> {
-    const user = await this.user.findOne(data.email);
+    const user = await this.user.findOne(data.sub);
     if (!user) throw new UnauthorizedException();
     await this.user.update(await user.hashPassword(newPassword));
     return "password successfully changed";
@@ -87,10 +89,10 @@ export class AuthService {
 
   async logout(data: IJwtPayload): Promise<string> {
     const user = await this.user.findOne(data.email);
-    if (!user || !(await this.cache.get(`blacklist:${data.jti}`))) throw new UnauthorizedException();
+    if (!user || !(await this.cache.get(`session:${data.jti}`))) throw new UnauthorizedException();
 
     const ttl = data.exp - +Date.now();
-    await this.cache.set(`blacklist:${data.jti}`, false, ttl);
+    await this.cache.set(`session:${data.jti}`, false, ttl);
 
     return "logout successful";
   }
