@@ -5,17 +5,11 @@ import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import ms from "ms";
-import { jwtTypes, IJwtPayload, ICachePaylad } from "../shared";
+import { jwtTypes, IJwtPayload } from "../shared";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
+import crypto from "crypto";
 
-//FIXME: Bad optimalization
-/**
- * This auth system has poor performance,
- * this is first version of this, i need to do this better.
- * Im thinking of creating blacklist instead of authorized tokens
- * but Im not sure how that would work, but I have idea with blacklisting JTI.
- */
 @Injectable()
 export class AuthService {
   constructor(
@@ -35,23 +29,27 @@ export class AuthService {
     if (!existingUser) throw new UnauthorizedException();
     if (!(await bcrypt.compare(data.password, existingUser.password))) throw new UnauthorizedException();
 
-    //FIXME: Creating payload with jti for refresh token
-    const payload: IJwtPayload = {
-      id: existingUser.id,
+    //FIXME: temp solution i will fix this ineffective code
+    const payload: Omit<IJwtPayload, "exp"> = {
+      sub: existingUser.id.toString(),
+      iat: +new Date(),
+      iss: "auth-service",
+      aud: "auth-service",
+      jti: crypto.randomUUID(),
       email: existingUser.email,
       username: existingUser.username,
     };
+    // const payloadRefresh: Omit<IJwtPayload, "exp" | "email" | "username"> = {
+    //   sub: existingUser.id.toString(),
+    //   iat: +new Date(),
+    //   iss: "auth-service",
+    //   aud: "auth-service",
+    //   jti: crypto.randomUUID(),
+    // };
 
     //3ms
     const token: string = await this.genJwt(payload, jwtTypes.ACCESS);
     const refresh: string = await this.genJwt(payload, jwtTypes.REFRESH);
-
-    //FIXME: Change redis record TTL to refresh token TTL
-    await this.cache.set<ICachePaylad>(
-      existingUser.id.toString(),
-      { token: token, refresh: refresh, unAuthorized: false },
-      ms("7d"),
-    );
 
     return {
       token: token,
@@ -59,43 +57,40 @@ export class AuthService {
     };
   }
 
-  async genJwt(payload: object, type: jwtTypes): Promise<string> {
+  async genJwt(payload: Omit<IJwtPayload, "exp">, type: jwtTypes): Promise<string> {
     const expiresIn = type === jwtTypes.ACCESS ? ms("5min") : ms("7d");
     const secret = type === jwtTypes.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
 
-    return await this.jwt.signAsync(payload, {
+    const token = await this.jwt.signAsync(payload, {
       expiresIn: expiresIn,
       secret: secret,
     });
+    const { exp, jti }: IJwtPayload = await this.jwt.decode(token);
+
+    const ttlRefresh = exp - +Date.now();
+    await this.cache.set(`blacklist:${jti}`, true, ttlRefresh);
+
+    return token;
   }
 
-  async changePassword(newPassword: string, data: IJwtPayload): Promise<string> {
+  async changePassword(newPassword: string, data: Omit<IJwtPayload, "exp">): Promise<string> {
     const user = await this.user.findOne(data.email);
     if (!user) throw new UnauthorizedException();
-
-    const value = await this.cache.get<ICachePaylad>(user.id.toString());
-    if (!value) throw new UnauthorizedException();
-
-    value.unAuthorized = true;
-    await this.cache.set(user.id.toString(), value);
-
     await this.user.update(await user.hashPassword(newPassword));
     return "password successfully changed";
   }
 
-  async refresh(payload: IJwtPayload): Promise<string> {
-    return await this.genJwt(payload, jwtTypes.ACCESS);
+  async refresh(payload: Omit<IJwtPayload, "exp">): Promise<string> {
+    const token = await this.genJwt(payload, jwtTypes.ACCESS);
+    return token;
   }
 
   async logout(data: IJwtPayload): Promise<string> {
     const user = await this.user.findOne(data.email);
-    if (!user) throw new UnauthorizedException();
+    if (!user || !(await this.cache.get(`blacklist:${data.jti}`))) throw new UnauthorizedException();
 
-    const value = await this.cache.get<ICachePaylad>(user.id.toString());
-    if (!value) throw new UnauthorizedException();
-
-    value.unAuthorized = true;
-    await this.cache.set(user.id.toString(), value);
+    const ttl = data.exp - +Date.now();
+    await this.cache.set(`blacklist:${data.jti}`, false, ttl);
 
     return "logout successful";
   }

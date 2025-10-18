@@ -3,7 +3,7 @@ import type { Request } from "express";
 import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../users/dto/user.dto";
 import { AuthService } from "./auth.service";
 import { AuthType, Roles } from "../common/decorators/auth.decorator";
-import { jwtTypes, IJwtPayload, roles } from "../shared";
+import { jwtTypes, roles } from "../shared";
 
 @Controller("auth")
 export class AuthController {
@@ -32,15 +32,12 @@ export class AuthController {
   @AuthType(jwtTypes.REFRESH)
   @Post("refresh")
   async refresh(@Req() req: Request): Promise<object> {
-    const { id, username, email } = req.user;
-    const payload: IJwtPayload = { id, username, email };
-    return await { token: await this.auth.refresh(payload) };
+    return await { token: await this.auth.refresh(req.user) };
   }
 
   @Roles([roles.USER])
   @Post("logout")
   async logout(@Req() req: Request): Promise<string> {
-    const payload: IJwtPayload = req.user;
-    return await this.auth.logout(payload);
+    return await this.auth.logout(req.user);
   }
 }

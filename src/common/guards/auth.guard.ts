@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AUTH_TYPE, ROLES, IJwtPayload, roles, ICachePaylad } from "../../shared";
+import { AUTH_TYPE, ROLES, IJwtPayload, roles } from "../../shared";
 import type { Cache } from "cache-manager";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
@@ -37,8 +37,8 @@ export class AuthGuard implements CanActivate {
         secret: secret,
       });
 
-      const value = await this.cache.get<ICachePaylad>(payload.id.toString());
-      if (!value || value.unAuthorized) throw new UnauthorizedException();
+      const value = await this.cache.get<boolean>(`blacklist:${payload.jti}`);
+      if (!value) throw new UnauthorizedException();
 
       request["user"] = payload;
     } catch {
