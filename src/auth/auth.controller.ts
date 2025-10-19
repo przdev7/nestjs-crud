@@ -3,7 +3,7 @@ import type { Request } from "express";
 import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../users/dto/user.dto";
 import { AuthService } from "./auth.service";
 import { AuthType, Roles } from "../common/decorators/auth.decorator";
-import { IJwtPayload, jwtTypes, roles } from "../shared";
+import { IJwtPayload, jwtEnum, roles } from "../shared";
 
 @Controller("auth")
 export class AuthController {
@@ -29,7 +29,7 @@ export class AuthController {
   }
 
   @Roles([roles.USER])
-  @AuthType(jwtTypes.REFRESH)
+  @AuthType(jwtEnum.REFRESH)
   @Post("refresh")
   async refresh(@Req() req: Request): Promise<object> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -4,7 +4,7 @@ import * as bcrypt from "bcrypt";
 import { UsersService } from "../users/users.service";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { jwtTypes, IJwtPayload } from "../shared";
+import { jwtEnum, IJwtPayload } from "../shared";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
 import crypto from "crypto";
@@ -47,8 +47,8 @@ export class AuthService {
     };
 
     //3ms
-    const token: string = await this.genJwt(payload, jwtTypes.ACCESS);
-    const refresh: string = await this.genJwt(payloadRefresh, jwtTypes.REFRESH);
+    const token: string = await this.genJwt(payload, jwtEnum.ACCESS);
+    const refresh: string = await this.genJwt(payloadRefresh, jwtEnum.REFRESH);
 
     return {
       token: token,
@@ -58,10 +58,10 @@ export class AuthService {
 
   async genJwt(
     payload: Omit<IJwtPayload, "exp"> | Omit<IJwtPayload, "exp" | "iat" | "email" | "username">,
-    type: jwtTypes,
+    enumJwt: jwtEnum,
   ): Promise<string> {
-    const expiresIn = type === jwtTypes.ACCESS ? "5min" : "7d";
-    const secret = type === jwtTypes.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
+    const expiresIn = enumJwt === jwtEnum.ACCESS ? "5min" : "7d";
+    const secret = enumJwt === jwtEnum.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
 
     const token = await this.jwt.signAsync(payload, {
       expiresIn: expiresIn,
@@ -71,7 +71,6 @@ export class AuthService {
 
     const ttlRefresh = exp * 1000 - +Date.now();
     await this.cache.set(`session:${jti}`, true, ttlRefresh);
-
     return token;
   }
 
@@ -83,7 +82,7 @@ export class AuthService {
   }
 
   async refresh(payload: Omit<IJwtPayload, "exp">): Promise<string> {
-    const token = await this.genJwt(payload, jwtTypes.ACCESS);
+    const token = await this.genJwt(payload, jwtEnum.ACCESS);
     return token;
   }
 

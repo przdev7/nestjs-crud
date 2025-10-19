@@ -1,4 +1,4 @@
-export enum jwtTypes {
+export enum jwtEnum {
   REFRESH,
   ACCESS,
 }
