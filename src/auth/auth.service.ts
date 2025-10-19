@@ -8,6 +8,7 @@ import { jwtEnum, IJwtPayload } from "../shared";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
 import crypto from "crypto";
+import ms from "ms";
 
 @Injectable()
 export class AuthService {
@@ -60,18 +61,21 @@ export class AuthService {
     payload: Omit<IJwtPayload, "exp"> | Omit<IJwtPayload, "exp" | "iat" | "email" | "username">,
     enumJwt: jwtEnum,
   ): Promise<string> {
-    const expiresIn = enumJwt === jwtEnum.ACCESS ? "5min" : "7d";
+    const exp = enumJwt === jwtEnum.ACCESS ? "5min" : "7d";
     const secret = enumJwt === jwtEnum.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
 
     const token = await this.jwt.signAsync(payload, {
-      expiresIn: expiresIn,
+      expiresIn: exp,
       secret: secret,
     });
-    const { exp, jti }: IJwtPayload = await this.jwt.decode(token);
 
-    const ttlRefresh = exp * 1000 - +Date.now();
-    await this.cache.set(`session:${jti}`, true, ttlRefresh);
+    await this.createSessionRedis(exp, payload.jti);
     return token;
+  }
+
+  async createSessionRedis(recordTTL: "5min" | "7d", jti: string): Promise<void> {
+    const ttl = ms(recordTTL) * 1000 - +Date.now();
+    await this.cache.set(`session:${jti}`, true, ttl);
   }
 
   async changePassword(newPassword: string, data: Omit<IJwtPayload, "exp">): Promise<string> {

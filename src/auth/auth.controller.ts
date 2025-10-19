@@ -34,7 +34,7 @@ export class AuthController {
   async refresh(@Req() req: Request): Promise<object> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { exp, ...payload } = req.user as IJwtPayload;
-    return await { token: await this.auth.refresh(payload) };
+    return { token: await this.auth.refresh(payload) };
   }
 
   @Roles([roles.USER])
