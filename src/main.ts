@@ -3,6 +3,7 @@ import { AppModule } from "./app.module";
 import { ConfigService } from "@nestjs/config";
 import { INestApplicationContext, ValidationPipe } from "@nestjs/common";
 import { SpelunkerModule } from "nestjs-spelunker";
+import cookieParser from "cookie-parser";
 
 async function spelunker(app: INestApplicationContext) {
   const tree = SpelunkerModule.explore(app);
@@ -18,6 +19,12 @@ async function bootstrap() {
   const context = await NestFactory.createApplicationContext(AppModule);
   const config = context.get(ConfigService);
   app.useGlobalPipes(new ValidationPipe());
+  app.use(cookieParser());
+  app.enableCors({
+    credentials: true,
+    //** IMPORTANT: ONLY FOR DEBUGGING */
+    origin: "*",
+  });
   spelunker(app);
   await app.listen(config.getOrThrow<number>("PORT_MAIN"), "0.0.0.0", () =>
     console.log(`listening on: ${config.getOrThrow<number>("PORT_MAIN")}`),

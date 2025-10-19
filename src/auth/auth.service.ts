@@ -61,21 +61,19 @@ export class AuthService {
     payload: Omit<IJwtPayload, "exp"> | Omit<IJwtPayload, "exp" | "iat" | "email" | "username">,
     enumJwt: jwtEnum,
   ): Promise<string> {
-    const exp = enumJwt === jwtEnum.ACCESS ? "5min" : "7d";
+    const exp = enumJwt === jwtEnum.ACCESS ? "5m" : "7d";
     const secret = enumJwt === jwtEnum.ACCESS ? this.config.get("JWT_SECRET") : this.config.get("JWT_REFRESH_SECRET");
-
     const token = await this.jwt.signAsync(payload, {
       expiresIn: exp,
       secret: secret,
     });
 
-    await this.createSessionRedis(exp, payload.jti);
+    await this.createSessionRedis(enumJwt === jwtEnum.ACCESS ? "ACCESS" : "REFRESH", exp, payload.jti);
     return token;
   }
 
-  async createSessionRedis(recordTTL: "5min" | "7d", jti: string): Promise<void> {
-    const ttl = ms(recordTTL) * 1000 - +Date.now();
-    await this.cache.set(`session:${jti}`, true, ttl);
+  async createSessionRedis(enumJwt: keyof typeof jwtEnum, ttl: "5m" | "7d", jti: string): Promise<void> {
+    await this.cache.set(`${enumJwt}:${jti}`, true, ms(ttl));
   }
 
   async changePassword(newPassword: string, data: Omit<IJwtPayload, "exp">): Promise<string> {
