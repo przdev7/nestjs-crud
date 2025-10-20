@@ -1,4 +1,4 @@
-import { Global, Module } from "@nestjs/common";
+import { Global, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import Joi from "joi";
@@ -11,6 +11,7 @@ import { UsersModule } from "../users/users.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { join } from "path";
 import KeyvRedis from "@keyv/redis";
+import { MainMiddleware } from "../common/middlewares/global.middleware";
 
 const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : ".env";
 
@@ -69,4 +70,8 @@ const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : 
 
   exports: [JwtModule, TypeOrmModule, CacheModule],
 })
-export class CoreModule {}
+export class CoreModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MainMiddleware).forRoutes("*");
+  }
+}
