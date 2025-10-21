@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AUTH_TYPE, ROLES, IJwtPayload, roles, jwtEnum } from "../../shared";
+import { AUTH_TYPE, ROLES, roles, jwtEnum } from "../../shared";
 import type { Cache } from "cache-manager";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
@@ -33,16 +33,14 @@ export class AuthGuard implements CanActivate {
         authType === jwtEnum.REFRESH
           ? this.config.getOrThrow<string>("JWT_REFRESH_SECRET")
           : this.config.getOrThrow<string>("JWT_SECRET");
-      const payload: IJwtPayload = await this.jwt.verifyAsync(token, {
+      await this.jwt.verifyAsync(token, {
         secret: secret,
       });
 
-      const value = await this.cache.get<boolean>(`session:${payload.jti}`);
-      if (!value) throw new UnauthorizedException();
-
-      request["user"] = payload;
-    } catch (err) {
-      throw new UnauthorizedException(err);
+      // const value = await this.cache.get<boolean>(`session:${payload.jti}`);
+      // if (!value) throw new UnauthorizedException();
+    } catch {
+      throw new UnauthorizedException();
     }
 
     return true;
