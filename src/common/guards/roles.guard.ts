@@ -1,8 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { Request } from "express";
 import { UsersService } from "../../users/users.service";
 import { Reflector } from "@nestjs/core";
-import { ROLES } from "../../shared";
+import { IAuthRequest, ROLES } from "../../shared";
 import { roles } from "../../shared/enums/roles.enum";
 
 @Injectable()
@@ -12,7 +11,7 @@ export class RolesGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
+    const request: IAuthRequest = context.switchToHttp().getRequest();
 
     const rolesDecorator: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
     if (rolesDecorator.length === 0) return true;

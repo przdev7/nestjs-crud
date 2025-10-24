@@ -3,7 +3,7 @@ import type { Request } from "express";
 import { ChangePasswordUserDTO, CreateUserDTO, LoginUserDTO } from "../users/dto/user.dto";
 import { AuthService } from "./auth.service";
 import { AuthType, Roles } from "../common/decorators/auth.decorator";
-import { IJwtPayload, jwtEnum, roles } from "../shared";
+import * as shared from "../shared";
 
 @Controller("auth")
 export class AuthController {
@@ -21,25 +21,25 @@ export class AuthController {
     return await this.auth.signIn(data);
   }
 
-  @Roles([roles.USER])
+  @Roles([shared.roles.USER])
   @Post("change-password")
   @HttpCode(200)
-  async changePassword(@Body() data: ChangePasswordUserDTO, @Req() req: Request): Promise<string> {
+  async changePassword(@Body() data: ChangePasswordUserDTO, @Req() req: shared.IAuthRequest): Promise<string> {
     return await this.auth.changePassword(data.password, req.user);
   }
 
-  @Roles([roles.USER])
-  @AuthType(jwtEnum.REFRESH)
+  @Roles([shared.roles.USER])
+  @AuthType(shared.jwtEnum.REFRESH)
   @Post("refresh")
   async refresh(@Req() req: Request): Promise<object> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { exp, ...payload } = req.user as IJwtPayload;
+    const { exp, ...payload } = req.user as shared.IJwtPayload;
     return { token: await this.auth.refresh(payload) };
   }
 
-  @Roles([roles.USER])
+  @Roles([shared.roles.USER])
   @Post("logout")
-  async logout(@Req() req: Request): Promise<string> {
+  async logout(@Req() req: shared.IAuthRequest): Promise<string> {
     return await this.auth.logout(req.user);
   }
 }

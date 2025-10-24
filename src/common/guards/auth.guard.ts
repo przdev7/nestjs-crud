@@ -2,8 +2,7 @@ import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedExceptio
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
-import { Request } from "express";
-import { AUTH_TYPE, ROLES, roles, jwtEnum } from "../../shared";
+import { AUTH_TYPE, ROLES, roles, jwtEnum, IAuthRequest } from "../../shared";
 import type { Cache } from "cache-manager";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
@@ -16,7 +15,7 @@ export class AuthGuard implements CanActivate {
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
+    const request: IAuthRequest = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
     const authType = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
@@ -46,7 +45,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(req: Request): string | undefined {
+  private extractTokenFromHeader(req: IAuthRequest): string | undefined {
     const [type, token] = req.headers.authorization?.split(" ") ?? [];
     return type == "Bearer" ? token : undefined;
   }
