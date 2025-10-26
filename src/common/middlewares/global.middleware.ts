@@ -11,6 +11,7 @@ export class MainMiddleware implements NestMiddleware {
     if (token != undefined) req.user = (await this.jwt.decode(token)) as IJwtPayload;
     else req.user = undefined;
 
+    this.extractRefreshFromCookie(req);
     req.id = crypto.randomUUID();
     next();
   }
@@ -18,5 +19,13 @@ export class MainMiddleware implements NestMiddleware {
   private extractTokenFromHeader(req: Request): string | undefined {
     const [type, token] = req.headers.authorization?.split(" ") ?? [];
     return type == "Bearer" ? token : undefined;
+  }
+
+  private extractRefreshFromCookie(req: Request) {
+    for (const [key, value] of Object.entries(req.signedCookies)) {
+      if (key === "refresh_token") return value;
+    }
+
+    return undefined;
   }
 }

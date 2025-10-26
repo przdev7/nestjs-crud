@@ -19,7 +19,7 @@ async function bootstrap() {
   const context = await NestFactory.createApplicationContext(AppModule);
   const config = context.get(ConfigService);
   app.useGlobalPipes(new ValidationPipe());
-  app.use(cookieParser());
+  app.use(cookieParser(config.getOrThrow<string>("COOKIE_SECRET")));
   app.enableCors({
     credentials: true,
     //** IMPORTANT: ONLY FOR DEBUGGING */

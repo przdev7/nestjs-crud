@@ -25,6 +25,7 @@ const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : 
       validationSchema: Joi.object({
         // NODE_ENV: Joi.string().default("development").valid("development", "production"),
         PORT_MAIN: Joi.number().port().default(3000),
+        COOKIE_SECRET: Joi.string().required(),
         DB_HOST: Joi.string().required(),
         DB_NAME: Joi.string().required(),
         DB_USERNAME: Joi.string().required(),

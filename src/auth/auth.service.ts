@@ -72,7 +72,7 @@ export class AuthService {
     return token;
   }
 
-  async createSessionRedis(enumJwt: keyof typeof jwtEnum, ttl: "5m" | "7d", jti: string): Promise<void> {
+  private async createSessionRedis(enumJwt: keyof typeof jwtEnum, ttl: "5m" | "7d", jti: string): Promise<void> {
     await this.cache.set(`${enumJwt}:${jti}`, true, ms(ttl));
   }
 
