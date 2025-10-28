@@ -31,8 +31,7 @@ export class AuthService {
 
     //FIXME: temp solution i will fix this ineffective code
     const payload: Omit<IJwtPayload, "exp" | "iat"> = {
-      sub: existingUser.id.toString(),
-      // iat: new Date().getTime() / 1000,
+      sub: existingUser.id,
       iss: "auth-service",
       aud: "auth-service",
       jti: crypto.randomUUID(),
@@ -40,8 +39,7 @@ export class AuthService {
       username: existingUser.username,
     };
     const payloadRefresh: Omit<IJwtPayload, "exp" | "email" | "username" | "iat"> = {
-      sub: existingUser.id.toString(),
-      // iat: +new Date(),
+      sub: existingUser.id,
       iss: "auth-service",
       aud: "auth-service",
       jti: crypto.randomUUID(),
@@ -83,13 +81,25 @@ export class AuthService {
     return "password successfully changed";
   }
 
-  async refresh(payload: Omit<IJwtPayload, "exp">): Promise<string> {
-    const token = await this.genJwt(payload, jwtEnum.ACCESS);
+  async refresh(payload: Omit<IJwtPayload, "exp" | "username" | "email">): Promise<string> {
+    const user = await this.user.findById(payload.sub);
+    if (!user) throw new UnauthorizedException();
+
+    const newPayload: Omit<IJwtPayload, "exp" | "iat"> = {
+      sub: user.id,
+      iss: "auth-service",
+      aud: "auth-service",
+      jti: crypto.randomUUID(),
+      email: user.email,
+      username: user.username,
+    };
+
+    const token = await this.genJwt(newPayload, jwtEnum.ACCESS);
     return token;
   }
 
   async logout(data: IJwtPayload): Promise<string> {
-    const user = await this.user.findOne(data.email);
+    const user = await this.user.findOne(data.sub);
     if (!user || !(await this.cache.get(`session:${data.jti}`))) throw new UnauthorizedException();
 
     const ttl = data.exp - +Date.now();

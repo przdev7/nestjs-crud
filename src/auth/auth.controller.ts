@@ -50,7 +50,7 @@ export class AuthController {
   @Post("refresh")
   async refresh(@Req() req: shared.IAuthRequest): Promise<object> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { exp, ...payload } = req.user;
+    const { exp, username, email, ...payload } = req.user;
     return { token: await this.auth.refresh(payload) };
   }
 

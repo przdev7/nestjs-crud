@@ -12,7 +12,7 @@ export class UsersController {
   @Get("me")
   @Roles([shared.roles.USER])
   async me(@Req() req: shared.IAuthRequest) {
-    return await plainToInstance(UserDTO, this.user.findById(parseInt(req.user.sub)), {
+    return plainToInstance(UserDTO, await this.user.findById(req.user.sub), {
       excludeExtraneousValues: true,
     });
   }

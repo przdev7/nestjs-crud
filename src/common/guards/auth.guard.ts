@@ -2,9 +2,10 @@ import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedExceptio
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
-import { AUTH_TYPE, ROLES, roles, jwtEnum, IAuthRequest } from "../../shared";
+import { AUTH_TYPE, ROLES, roles, jwtEnum, extractRefreshFromCookie, extractTokenFromHeader } from "../../shared";
 import type { Cache } from "cache-manager";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Request } from "express";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -15,8 +16,10 @@ export class AuthGuard implements CanActivate {
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: IAuthRequest = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const request: Request = context.switchToHttp().getRequest();
+
+    //FIXME: What if there will be access token & refresh? Frontend should send only refresh for /refresh/ route to avoid this problem
+    const token = extractTokenFromHeader(request) ?? extractRefreshFromCookie(request);
 
     const authType = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
     const roles: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
@@ -43,10 +46,5 @@ export class AuthGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private extractTokenFromHeader(req: IAuthRequest): string | undefined {
-    const [type, token] = req.headers.authorization?.split(" ") ?? [];
-    return type == "Bearer" ? token : undefined;
   }
 }

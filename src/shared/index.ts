@@ -5,3 +5,5 @@ export * from "./constants/metadata.keys";
 export * from "./types/IjwtPayload";
 export * from "./types/ICachePayload";
 export * from "./types/IAuthorizedRequest";
+
+export * from "./helpers/extract-token";

@@ -16,7 +16,7 @@ export class RolesGuard implements CanActivate {
     const rolesDecorator: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
     if (rolesDecorator.length === 0) return true;
 
-    const user = await this.user.findOne(request.user.email);
+    const user = await this.user.findById(request.user.sub);
     if (!user) throw new UnauthorizedException();
 
     console.log(user.roles.map((role) => rolesDecorator.includes(role)));
