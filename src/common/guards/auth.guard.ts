@@ -16,10 +16,10 @@ export class AuthGuard implements CanActivate {
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
+    const req: Request = context.switchToHttp().getRequest();
 
     //FIXME: What if there will be access token & refresh? Frontend should send only refresh for /refresh/ route to avoid this problem
-    const token = extractTokenFromHeader(request) ?? extractRefreshFromCookie(request);
+    const token = extractTokenFromHeader(req) ?? extractRefreshFromCookie(req);
 
     const authType: jwtEnum = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
     const roles: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
@@ -29,7 +29,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const secret =
-        authType == "REFRESH"
+        authType === "REFRESH"
           ? this.config.getOrThrow<string>("JWT_REFRESH_SECRET")
           : this.config.getOrThrow<string>("JWT_SECRET");
 
@@ -37,11 +37,10 @@ export class AuthGuard implements CanActivate {
         secret: secret,
       });
 
-      const isAuthorized = await this.cache.get<boolean>(`${authType}:${request.user?.jti}`);
-      console.log(isAuthorized);
+      const isAuthorized = await this.cache.get<boolean>(`${authType ?? "ACCESS"}:${req.user?.jti}`);
       if (!isAuthorized) throw new UnauthorizedException();
-    } catch (err) {
-      throw new UnauthorizedException(err);
+    } catch {
+      throw new UnauthorizedException();
     }
 
     return true;

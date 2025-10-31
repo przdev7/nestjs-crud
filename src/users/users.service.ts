@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserEntity } from "../entities/user.entity";
 import { Repository } from "typeorm";
@@ -12,25 +12,43 @@ export class UsersService {
     return await this.user.find();
   }
 
-  async findById(id: number): Promise<UserEntity | null> {
-    const user = await this.user.findOne({ where: { id: id } });
+  async findOne(identifier: string): Promise<UserEntity | null> {
+    const user = await this.user.findOne({
+      where: [
+        {
+          username: identifier,
+        },
+        {
+          email: identifier,
+        },
+      ],
+    });
+
     return user;
   }
 
-  async findOne(identifier: string | number): Promise<UserEntity | null> {
+  async findOneByIdOrThrow(id: number): Promise<UserEntity> {
+    try {
+      const user = await this.user.findOneByOrFail({ id: id });
+      return user;
+    } catch {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async findOneOrThrow(identifier: string): Promise<UserEntity> {
     const user = await this.user.findOne({
-      where:
-        typeof identifier === "number"
-          ? { id: identifier }
-          : [
-              {
-                username: identifier,
-              },
-              {
-                email: identifier,
-              },
-            ],
+      where: [
+        {
+          username: identifier,
+        },
+        {
+          email: identifier,
+        },
+      ],
     });
+    if (!user) throw new UnauthorizedException();
+
     return user;
   }
 

@@ -11,13 +11,12 @@ export class RolesGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: IAuthRequest = context.switchToHttp().getRequest();
+    const req: IAuthRequest = context.switchToHttp().getRequest();
 
     const rolesDecorator: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
     if (rolesDecorator.length === 0) return true;
 
-    const user = await this.user.findById(request.user.sub);
-    if (!user) throw new UnauthorizedException();
+    const user = await this.user.findOneByIdOrThrow(req.user.sub);
     if (!user.roles.map((role) => rolesDecorator.includes(role))) throw new UnauthorizedException();
 
     return true;

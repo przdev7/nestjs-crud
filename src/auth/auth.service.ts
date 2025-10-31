@@ -24,8 +24,7 @@ export class AuthService {
   }
 
   async signIn(data: LoginUserDTO): Promise<object> {
-    const existingUser = await this.user.findOne(data.email ?? data.username);
-    if (!existingUser) throw new UnauthorizedException();
+    const existingUser = await this.user.findOneOrThrow(data.email ?? data.username);
     if (!(await bcrypt.compare(data.password, existingUser.password))) throw new UnauthorizedException();
 
     //FIXME: temp solution i will fix this ineffective code
@@ -79,8 +78,7 @@ export class AuthService {
   }
 
   async changePassword(newPassword: string, payload: IJwtPayload): Promise<string> {
-    const user = await this.user.findOne(payload.sub);
-    if (!user) throw new UnauthorizedException();
+    const user = await this.user.findOneByIdOrThrow(payload.sub);
 
     const ttl = (payload.exp - Math.floor(Date.now() / 1000)) * 1000;
     await this.manageSession("REFRESH", false, ttl, payload.jti);
@@ -90,8 +88,7 @@ export class AuthService {
   }
 
   async refresh(payload: Omit<IJwtPayload, "exp" | "username" | "email">): Promise<string> {
-    const user = await this.user.findById(payload.sub);
-    if (!user) throw new UnauthorizedException();
+    const user = await this.user.findOneByIdOrThrow(payload.sub);
 
     const newPayload: Omit<IJwtPayload, "exp" | "iat"> = {
       sub: user.id,
@@ -107,8 +104,7 @@ export class AuthService {
   }
 
   async logout(payload: IJwtPayload): Promise<string> {
-    const user = await this.user.findOne(payload.sub);
-    if (!user || !(await this.cache.get(`REFRESH:${payload.jti}`))) throw new UnauthorizedException();
+    if (!(await this.cache.get(`REFRESH:${payload.jti}`))) throw new UnauthorizedException();
 
     const ttl = (payload.exp - Math.floor(Date.now() / 1000)) * 1000;
     await this.manageSession("REFRESH", false, ttl, payload.jti);
