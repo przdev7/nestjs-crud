@@ -1,4 +1,4 @@
 export enum jwtEnum {
-  REFRESH,
-  ACCESS,
+  REFRESH = "REFRESH",
+  ACCESS = "ACCESS",
 }

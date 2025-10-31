@@ -6,13 +6,6 @@ import * as shared from "../shared";
 import type { Response } from "express";
 import ms from "ms";
 
-// res
-//   .cookie("access_token", await this.auth.refresh(payload), {
-//     signed: true,
-//     httpOnly: true,
-//     expires: new Date(now + req.user.exp),
-//   })
-//   .send("refreshed");
 @Controller("auth")
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
@@ -39,6 +32,7 @@ export class AuthController {
   }
 
   @Roles([shared.roles.USER])
+  @AuthType(shared.jwtEnum.REFRESH)
   @Post("change-password")
   @HttpCode(200)
   async changePassword(@Body() data: ChangePasswordUserDTO, @Req() req: shared.IAuthRequest): Promise<string> {
@@ -55,6 +49,7 @@ export class AuthController {
   }
 
   @Roles([shared.roles.USER])
+  @AuthType(shared.jwtEnum.REFRESH)
   @Post("logout")
   async logout(@Req() req: shared.IAuthRequest): Promise<string> {
     return await this.auth.logout(req.user);

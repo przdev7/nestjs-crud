@@ -9,7 +9,6 @@ import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import type { Cache } from "cache-manager";
 import crypto from "crypto";
 import ms from "ms";
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -66,19 +65,28 @@ export class AuthService {
       secret: secret,
     });
 
-    await this.createSessionRedis(enumJwt === jwtEnum.ACCESS ? "ACCESS" : "REFRESH", exp, payload.jti);
+    await this.manageSession(enumJwt === jwtEnum.ACCESS ? "ACCESS" : "REFRESH", true, ms(exp), payload.jti);
     return token;
   }
 
-  private async createSessionRedis(enumJwt: keyof typeof jwtEnum, ttl: "5m" | "7d", jti: string): Promise<void> {
-    await this.cache.set(`${enumJwt}:${jti}`, true, ms(ttl));
+  private async manageSession(
+    enumJwt: keyof typeof jwtEnum,
+    isAuthorized: boolean,
+    ttl: number,
+    jti: string,
+  ): Promise<void> {
+    await this.cache.set(`${enumJwt}:${jti}`, isAuthorized, ttl);
   }
 
-  async changePassword(newPassword: string, data: Omit<IJwtPayload, "exp">): Promise<string> {
-    const user = await this.user.findOne(data.sub);
+  async changePassword(newPassword: string, payload: IJwtPayload): Promise<string> {
+    const user = await this.user.findOne(payload.sub);
     if (!user) throw new UnauthorizedException();
+
+    const ttl = (payload.exp - Math.floor(Date.now() / 1000)) * 1000;
+    await this.manageSession("REFRESH", false, ttl, payload.jti);
+
     await this.user.update(await user.hashPassword(newPassword));
-    return "password successfully changed";
+    return "password successfully changed, please login again.";
   }
 
   async refresh(payload: Omit<IJwtPayload, "exp" | "username" | "email">): Promise<string> {
@@ -98,12 +106,12 @@ export class AuthService {
     return token;
   }
 
-  async logout(data: IJwtPayload): Promise<string> {
-    const user = await this.user.findOne(data.sub);
-    if (!user || !(await this.cache.get(`session:${data.jti}`))) throw new UnauthorizedException();
+  async logout(payload: IJwtPayload): Promise<string> {
+    const user = await this.user.findOne(payload.sub);
+    if (!user || !(await this.cache.get(`REFRESH:${payload.jti}`))) throw new UnauthorizedException();
 
-    const ttl = data.exp - +Date.now();
-    await this.cache.set(`session:${data.jti}`, false, ttl);
+    const ttl = (payload.exp - Math.floor(Date.now() / 1000)) * 1000;
+    await this.manageSession("REFRESH", false, ttl, payload.jti);
 
     return "logout successful";
   }

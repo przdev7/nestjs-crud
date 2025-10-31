@@ -21,28 +21,27 @@ export class AuthGuard implements CanActivate {
     //FIXME: What if there will be access token & refresh? Frontend should send only refresh for /refresh/ route to avoid this problem
     const token = extractTokenFromHeader(request) ?? extractRefreshFromCookie(request);
 
-    const authType = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
+    const authType: jwtEnum = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
     const roles: roles[] = this.reflector.getAllAndOverride(ROLES, [context.getHandler()]);
 
     if (roles.length === 0) return true;
-
-    if (!token) {
-      throw new UnauthorizedException();
-    }
+    if (!token) throw new UnauthorizedException();
 
     try {
       const secret =
-        authType === jwtEnum.REFRESH
+        authType == "REFRESH"
           ? this.config.getOrThrow<string>("JWT_REFRESH_SECRET")
           : this.config.getOrThrow<string>("JWT_SECRET");
+
       await this.jwt.verifyAsync(token, {
         secret: secret,
       });
 
-      // const value = await this.cache.get<boolean>(`session:${payload.jti}`);
-      // if (!value) throw new UnauthorizedException();
-    } catch {
-      throw new UnauthorizedException();
+      const isAuthorized = await this.cache.get<boolean>(`${authType}:${request.user?.jti}`);
+      console.log(isAuthorized);
+      if (!isAuthorized) throw new UnauthorizedException();
+    } catch (err) {
+      throw new UnauthorizedException(err);
     }
 
     return true;
