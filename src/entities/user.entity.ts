@@ -15,6 +15,10 @@ export class UserEntity {
    * You can login with your email/username and password,
    * But when in db are 2 users with this same name you can
    * login only for this user account which one was created first
+   *
+   * potential solutions:
+   * - restrict login only to email
+   * - make username as PRIMARY KEY
    */
   @Column({ nullable: false })
   username: string;

@@ -27,7 +27,6 @@ export class AuthService {
     const existingUser = await this.user.findOneOrThrow(data.email ?? data.username);
     if (!(await bcrypt.compare(data.password, existingUser.password))) throw new UnauthorizedException();
 
-    //FIXME: temp solution i will fix this ineffective code
     const payload: JwtRawPayload = {
       sub: existingUser.id,
       iss: "auth-service",
@@ -36,16 +35,17 @@ export class AuthService {
       email: existingUser.email,
       username: existingUser.username,
     };
-    const payloadRefresh: JwtRefreshRawPayload = {
-      sub: existingUser.id,
-      iss: "auth-service",
-      aud: "auth-service",
-      jti: crypto.randomUUID(),
-    };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { username, email, ...refreshPayload } = payload;
+    refreshPayload.jti = crypto.randomUUID();
+
+    console.log(refreshPayload.jti);
+    console.log(payload.jti);
 
     //3ms
     const token: string = await this.genJwt(payload, jwtEnum.ACCESS);
-    const refresh: string = await this.genJwt(payloadRefresh, jwtEnum.REFRESH);
+    const refresh: string = await this.genJwt(refreshPayload, jwtEnum.REFRESH);
+
     return {
       token: token,
       refreshToken: refresh,

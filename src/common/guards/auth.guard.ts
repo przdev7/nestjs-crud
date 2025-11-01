@@ -18,7 +18,8 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
 
-    //FIXME: What if there will be access token & refresh? Frontend should send only refresh for /refresh/ route to avoid this problem
+    //FIXME: What if there will be access token & refresh, backend will throw unauthorzied even if u pass by cookies refresh?
+    // Frontend should send only refresh for /refresh/ route to avoid this problem
     const token = extractTokenFromHeader(req) ?? extractRefreshFromCookie(req);
 
     const authType: jwtEnum = this.reflector.getAllAndOverride(AUTH_TYPE, [context.getHandler()]);
