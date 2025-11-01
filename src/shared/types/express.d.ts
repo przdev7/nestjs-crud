@@ -1,10 +1,10 @@
-import type { IJwtPayload } from "./IjwtPayload";
+import type { IJwtPayload, IJwtRefreshPayload } from "./jwtPayload";
 
 declare global {
   namespace Express {
     interface Request {
       id: string;
-      user?: IJwtPayload;
+      user?: IJwtPayload | IJwtRefreshPayload;
     }
   }
 }

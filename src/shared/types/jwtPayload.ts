@@ -9,7 +9,11 @@ type StrictJwtPayload = Omit<BaseJwtPayload, string> & {
   jti?: string;
 };
 
-export interface IJwtPayload extends Required<StrictJwtPayload> {
+export type JwtPayload = Required<StrictJwtPayload> & {
   username: string;
   email: string;
-}
+};
+export type JwtRawPayload = Omit<JwtPayload, "exp" | "iat">;
+
+export type JwtRefreshPayload = Omit<JwtPayload, "email" | "username">;
+export type JwtRefreshRawPayload = Omit<JwtRefreshPayload, "exp" | "iat">;
