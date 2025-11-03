@@ -53,8 +53,9 @@ export class UsersService {
   }
 
   async create(data: CreateUserDTO): Promise<UserEntity> {
-    const existingUser = await this.findOne(data.email);
-    if (existingUser) throw new ConflictException();
+    const existingEmail = await this.findOne(data.email);
+    const existingUserName = await this.findOne(data.username);
+    if (existingEmail || existingUserName) throw new ConflictException();
     const user = await this.user.create(data).hashPassword(data.password);
 
     return await this.user.save(user);
