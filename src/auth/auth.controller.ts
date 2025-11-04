@@ -11,6 +11,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Roles([])
+  @HttpCode(201)
   @Post("sign-up")
   async signUp(@Body() data: CreateUserDTO): Promise<string> {
     return await this.auth.signUp(data);
@@ -18,6 +19,7 @@ export class AuthController {
 
   @Roles([])
   @Post("sign-in")
+  @HttpCode(200)
   async signIn(@Body() data: LoginUserDTO, @Res() res: Response): Promise<object> {
     const tokens: object = await this.auth.signIn(data);
     const now = Date.now();
