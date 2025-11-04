@@ -1,4 +1,4 @@
-# Create User's Account
+# Login into user account
 
 Create session for your account and return refresh in cookie.
 
@@ -8,7 +8,7 @@ Create session for your account and return refresh in cookie.
 
 **Auth required** : NO
 
-**Permissions required** : None
+**Roles required** : None
 
 **Data constraints**
 

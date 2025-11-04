@@ -1,16 +1,18 @@
 # Nestjs - CRUD API
 
+## General-info
+
 This project was created as an introducion to nestjs.
 
 ## Table of contents
 
 - [General info](#general-info)
-- [Technologies](#technologies)
+- [Technologies]("#TechStack)
 - [Setup](#setup)
 - [Api docs](#api-docs)
 - [Authors](#authors)
 
-## Tech stack
+## TechStack
 
 Technologies in this project:
 
