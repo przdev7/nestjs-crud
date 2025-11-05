@@ -31,7 +31,7 @@ Cookie: refresh_token=abcdef123456
 
 **Content example**
 
-```json
+```
 password successfully changed, please login again.
 ```
 

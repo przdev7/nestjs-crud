@@ -18,8 +18,8 @@ export class UsersController {
   }
 
   @Get("all")
-  @Roles([shared.roles.ADMIN])
+  @Roles([])
   async findAll() {
-    return await this.user.findAll();
+    return plainToInstance(UserDTO, await this.user.findAll(), { excludeExtraneousValues: true });
   }
 }

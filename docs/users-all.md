@@ -1,6 +1,6 @@
-# Fetch information about your account
+# Returns all users (admin only)
 
-Gives information about your account
+Returns every user from database in array
 
 **URL** : `/users/all`
 

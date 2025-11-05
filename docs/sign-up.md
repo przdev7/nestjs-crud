@@ -1,6 +1,6 @@
 # Create User's Account
 
-Create session for your account and return refresh in cookie.
+Creates account for user
 
 **URL** : `/auth/sign-in/`
 
@@ -40,7 +40,7 @@ Provide username, email and password:
 
 **Content example**
 
-```json
+```
 User created
 ```
 
