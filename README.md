@@ -7,7 +7,7 @@ This project was created as an introducion to nestjs.
 ## Table of contents
 
 - [General info](#general-info)
-- [Technologies]("#TechStack)
+- [Technologies](#TechStack)
 - [Setup](#setup)
 - [Api docs](#api-docs)
 - [Authors](#authors)
