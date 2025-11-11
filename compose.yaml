@@ -5,10 +5,9 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PORT: ${DB_PORT}
     expose:
-      - 5432
-    ports:
-      - "5431:5432/tcp"
+      - "${DB_PORT}"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
@@ -17,17 +16,13 @@ services:
       - database
     hostname: redis
     image: "redis:alpine"
-    ports:
-      - "${PORT_REDIS}:${PORT_REDIS}/tcp"
     expose:
       - 6379
     volumes:
       - cache:/data
     restart: always
   backend:
-    environment:
-      - NODE_ENV=production
-    env_file: .env.production
+    env_file: .env
     depends_on:
       - database
       - redis

@@ -1,10 +1,10 @@
-FROM node:24.0.1-alpine3.21
+FROM node:24-alpine
 
 WORKDIR /src
 
 COPY ./package*.json .
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
@@ -12,10 +12,4 @@ ENV port=8080
 
 EXPOSE 8080
 
-
 CMD [ "npm", "start" ]
-
-
-
-
-
