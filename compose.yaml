@@ -8,27 +8,66 @@ services:
       POSTGRES_PORT: ${DB_PORT}
     expose:
       - "${DB_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
   redis:
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     hostname: redis
     image: "redis:alpine"
     expose:
       - 6379
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
     volumes:
       - cache:/data
     restart: always
   backend:
     env_file: .env
     depends_on:
-      - database
-      - redis
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     build: .
+    expose:
+      - "${PORT_MAIN}"
+    # ports:
+    #   - "3001:${PORT_MAIN}/tcp"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "-G", "http://localhost:${PORT_MAIN}"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+      start_period: 30s
+  nginx:
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+    image: "nginx:1.29"
+    expose:
+      - 80
     ports:
-      - "${PORT_MAIN}:${PORT_MAIN}/tcp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    volumes:
+      - "./init/nginx.conf:/etc/nginx/nginx.conf:ro"
 
 volumes:
   cache:
