@@ -43,10 +43,10 @@ services:
     build: .
     expose:
       - "${PORT_MAIN}"
-    # ports:
-    #   - "3001:${PORT_MAIN}/tcp"
+    deploy:
+      replicas: 3
     healthcheck:
-      test: ["CMD", "curl", "--fail", "-G", "http://localhost:${PORT_MAIN}"]
+      test: ["CMD-SHELL", "wget -S http://0.0.0.0:$PORT_MAIN || exit 1"]
       interval: 5s
       timeout: 20s
       retries: 5
