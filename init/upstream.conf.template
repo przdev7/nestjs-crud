@@ -1,0 +1,5 @@
+# if you want more replica's add here your app and in compose.yaml (number of replica's)
+upstream backendApp {
+    least_conn;
+    server backend:${PORT_MAIN};
+}

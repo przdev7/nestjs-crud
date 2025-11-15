@@ -46,12 +46,13 @@ services:
     deploy:
       replicas: 3
     healthcheck:
-      test: ["CMD-SHELL", "wget -S http://0.0.0.0:$PORT_MAIN || exit 1"]
+      test: ["CMD-SHELL", "wget -S --spider http://0.0.0.0:$PORT_MAIN || exit 1"]
       interval: 5s
       timeout: 20s
       retries: 5
       start_period: 30s
   nginx:
+    env_file: .env
     depends_on:
       database:
         condition: service_healthy
@@ -68,7 +69,8 @@ services:
       - "443:443/tcp"
     volumes:
       - "./init/nginx.conf:/etc/nginx/nginx.conf:ro"
-
+      - "./init/upstream.conf.template:/etc/nginx/templates/upstream.conf.template:ro"
+      - "./init/default.conf:/etc/nginx/conf.d/default.conf:ro"
 volumes:
   cache:
     driver: local
