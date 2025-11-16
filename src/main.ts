@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { INestApplicationContext, ValidationPipe } from "@nestjs/common";
 import { SpelunkerModule } from "nestjs-spelunker";
 import cookieParser from "cookie-parser";
+import { NestExpressApplication } from "@nestjs/platform-express";
 
 async function spelunker(app: INestApplicationContext) {
   const tree = SpelunkerModule.explore(app);
@@ -15,9 +16,11 @@ async function spelunker(app: INestApplicationContext) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const context = await NestFactory.createApplicationContext(AppModule);
   const config = context.get(ConfigService);
+
+  app.set("trust proxy", true);
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser(config.getOrThrow<string>("COOKIE_SECRET")));
   app.enableCors({
