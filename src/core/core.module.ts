@@ -59,7 +59,9 @@ const envFileName = process.env.NODE_ENV === "production" ? ".env.production" : 
       inject: [ConfigService],
       isGlobal: true,
       useFactory: (config: ConfigService) => ({
-        stores: new KeyvRedis(config.getOrThrow<string>("REDIS_URI")),
+        stores: new KeyvRedis(config.getOrThrow<string>("REDIS_URI"), {
+          throwOnConnectError: true,
+        }),
       }),
     }),
   ],
